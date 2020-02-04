@@ -1,7 +1,7 @@
 ---
 title: "Statistical assignment 1"
-author: "[add your name and candidate number here]"
-date: "[add date here]"
+author: "Ben Machon"
+date: "01/02/2020"
 output: github_document
 ---
 
@@ -15,7 +15,7 @@ In this assignment you will work with the individual level data from wave 8 of t
 
 ```{r}
 library(tidyverse)
-Data <- ...
+Data <- read_tsv("/Users/benmachon/Downloads/UKDA-6614-tab/tab/ukhls_w8/h_indresp.tab")
 ```
 
 Now you have got your data frame stored as Data. 
@@ -30,7 +30,7 @@ Complete the code below to select those variables from the data frame and save t
 
 ```{r}
 Data <- Data %>%
-        select(...)
+        select(pidp, h_eumem, h_sex_dv, h_age_dv, h_memorig)
 ```
 
 ## Filter observations (10 points)
@@ -39,7 +39,7 @@ To make nationally representative estimates from the Understanding Society data 
 
 ```{r}
 Data <- Data %>%
-        filter(...)
+        filter(h_memorig==1)
 ```
 
 ## Recode data (20 points)
@@ -64,11 +64,10 @@ In all cases, we want to create new variables.
 
 ```{r}
 Data <- Data %>%
-        mutate(EU = ...
-      
-        ) %>%
-        mutate(sex = ...) %>%
-        mutate(agegr = ...
+        mutate(EU = ifelse(h_eumem == 1,1, ifelse(h_eumem == 2, 0, NA))) %>%
+        
+  mutate(sex = case_when(h_sex_dv == 1 ~ "male", h_sex_dv == 2 ~ "female", h_sex_dv == 0 ~ "inconsistent")) %>%
+        mutate(agegr = case_when(between(h_age_dv, 16, 25) ~ "16 - 25", between(h_age_dv, 26, 40) ~ "26 - 40", between(h_age_dv, 41, 55) ~ "41 - 55", between(h_age_dv, 56, 70) ~ "56 - 70", between(h_age_dv, 71, 102) ~ "70+")
         )
 
 ```
@@ -79,11 +78,14 @@ Let us **dplyr** to calculate how many people in the sample supported Remain and
 
 ```{r}
 Data %>%
-        ...
+count(EU) %>%
+mutate(perc = n / sum(n) * 100)
         
 ```
 
 Write a couple of sentences with the interpretation of this result. How this compares with the result of the 2016 referendum? Why?
+
+The newly coded binary variable shows that 48.4% of people who answered voted to remain in the European Union, whereas only 40.7% of those taking the survey voted to leave. This is inconsistent with the known nation-wide result which was which was a 51.9% - 48.1% split in favour of the Leave campaign. It would therefore be sensible to assume that the 10.9% of participants who are marked down as NA would be assumed to be mainly Leave voters- if the survey follows the trend of the general population. In this case the NA voters have skewed the data to present a result contrary to the actual result.
 
 ## Summarise data by sex and age (30 points)
 
@@ -92,9 +94,12 @@ Now let us look at the support for Leave and Remain by sex and age. Use your new
 
 ```{r}
 Data %>%
-        ...
+group_by(agegr, sex) %>%
+  summarise(propEU = mean(EU,na.rm = TRUE)*100 )
         
 ```
 
 
 Write a couple of sentences interpreting your results.
+
+These results illustrate an inverse trend between age and voting to remain in the EU, with both men and women of a younger age voting to remain in a higher percentage than their elder counterparts. another discernable pattern is that, despite the downward trend, females voted to remain in a higher percentage than men every time within their age category. This shows that females and younger generations are more sympathetic to the EU. 
